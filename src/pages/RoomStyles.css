@@ -1,0 +1,53 @@
+.users{
+    display: flex;
+    width: 100vw;
+
+}
+.header{
+    display: flex;
+    width: 100vw;
+    justify-content: space-between; /* This will push .logo to the left and .user-list to the right */
+    align-items: center; /* This will vertically align the items in the center */
+}
+.title-logo{
+    margin-left: 5%;
+}
+.logo{
+    justify-self: left;
+    height: 1rem;
+}
+.user-list{
+    display: flex;
+    justify-content: space-between;
+    flex-direction: row;
+    margin-right: 5%;
+}
+.User{
+    flex-direction: row;
+}
+p {
+    display: none;
+}
+  
+div:hover + p {
+    display: flex;  
+}
+
+.footer{
+    position: absolute;
+    bottom: 0;
+    display: flex;
+    justify-content: center;
+    width: 100vw;
+}
+.button{
+    margin-bottom: 10px;
+    padding: 10px;
+    padding-left: 5%;
+    padding-right: 5%;
+    color :#EDEDED;
+    font-size: .8rem;
+    border-radius: 5px;
+    border: none;
+    background-color: #F57D1F;
+}

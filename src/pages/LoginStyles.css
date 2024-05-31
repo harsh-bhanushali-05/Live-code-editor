@@ -1,0 +1,64 @@
+body{
+    color: #EDEDED;
+    background-color: #171717;
+}
+.Parent{
+    height: 100vh;
+    width: 100vw;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.form-box{
+    display: flex;
+    flex-direction: column;
+    border-radius: 10px;
+    padding: 20px;
+    background-color: #444444;
+    width: 40vw;
+
+}
+.logo{
+    /* scale: 0.2; */
+    /* width: 2vw;
+     */
+     /* font-size: 0.8rem; */
+     height: 1.6rem;
+}
+.input-form{
+    /* display: inline-block; */
+    color: #EDEDED;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+.input-box{
+    color: #EDEDED;
+    width: 30vw;
+    padding: 10px;
+    border-radius: 3px;
+    border: none;
+    margin-bottom: 10px;
+    background-color: #373A40;
+}
+.button{
+    padding: 10px;
+    color :#EDEDED;
+    font-size: .8rem;
+    border-radius: 5px;
+    border: none;
+    background-color: #F57D1F;
+}
+.button:hover{
+    background: #DA0037;
+    transition: ease-in 0.1s;
+}
+.new-room{
+    color: #F57D1F;
+    text-decoration: none;
+}
+.new-room:hover{
+    color: #DA0037;
+    transition: ease-in 0.1s;
+}

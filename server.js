@@ -1,5 +1,6 @@
 const express = require('express');
 const http = require('http');
+const path = require('path');
 const { Server } = require('socket.io');
 const ACTIONS = require('./src/Actions');
 
@@ -20,6 +21,10 @@ function getAllUser(id) {
     });
 
 }
+app.use(express.static('build'));
+app.use((req, res, next) => {
+    res.sendFile(path.join(__dirname, 'build', 'index.html'));
+})
 
 // Socket.IO connection handling
 io.on('connection', (socket) => {

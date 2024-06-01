@@ -118,6 +118,7 @@ function Room(props) {
         const clientSecret = process.env.secret;
         // const language = 'java';
         const versionIndex = '3';
+        console.log("this is the change ")
         try {
             const response = await axios.post('/v1/execute', {
                 script: code,
@@ -160,7 +161,7 @@ function Room(props) {
                     theme="myCustomTheme"
                 />
                 <div class="horizontal-line"></div>
-                <button onClick={runCode} className="button run"><b>Run Code</b></button>
+                <button onClick={runCode} className="button run"><b onClick={runCode}>Run Code</b></button>
                 <button className="button run"><b>Current language : {language}</b></button>
                 <button onClick={() => { setvisible((prev) => { return !prev }) }} className="button  run "><b> Change language</b></button>
                 {visible ? <div>

@@ -51,3 +51,18 @@ div:hover + p {
     border: none;
     background-color: #F57D1F;
 }
+.horizontal-line {
+    width: 95%;
+    margin: 0 auto 0 auto;
+    height: 0.25px;
+    background-color: #F57D1F;
+    margin-bottom: 30px;
+}
+.bottom{
+    margin-left: 5%;
+    margin-right: 5%;
+    margin-bottom: 20px;
+}
+.run{
+    margin-left: 5%;
+}

@@ -5,7 +5,7 @@ import Client from "../Components/Client";
 import toast from "react-hot-toast";
 import Editor, { loader } from '@monaco-editor/react';
 import axios from 'axios';
-import { edit_key, secret } from "../data.jsx";
+import { REACT_APP_BACKEND, edit_key, secret } from "../data.jsx";
 import { initSocket } from "../socket";
 import ACTIONS from "../Actions";
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
@@ -13,12 +13,12 @@ import { useLocation, useNavigate, useParams } from 'react-router-dom';
 function Room(props) {
     const { id } = useParams();
     const [code, setCode] = useState('// type your code here');
-
+    const [visible, setvisible] = useState(false);
     // const id = props.id;
     const location = useLocation();
     const socketRef = useRef(null);
     const codeRef = useRef(null);
-
+    const [language, setlanguage] = useState("java");
     const nav = useNavigate();
     const [client, setClient] = useState([]);
     useEffect(() => {
@@ -117,7 +117,7 @@ function Room(props) {
     const runCode = async () => {
         const clientId = edit_key;
         const clientSecret = secret;
-        const language = 'java';
+        // const language = 'java';
         const versionIndex = '3';
         try {
             const response = await axios.post('/v1/execute', {
@@ -154,17 +154,28 @@ function Room(props) {
             <div>
                 <Editor
                     height="60vh"
-                    defaultLanguage="java"
+                    defaultLanguage={language}
                     value={code}
                     onChange={(value) => changeCode(value)}
                     options={editorOptions}
                     theme="myCustomTheme"
                 />
-                <button onClick={runCode} className="button"><b>Run Code</b></button>
-                <pre>{output}</pre>
+                <div class="horizontal-line"></div>
+                <button onClick={runCode} className="button run"><b>Run Code</b></button>
+                <button className="button run"><b>Current language : {language}</b></button>
+                <button onClick={() => { setvisible((prev) => { return !prev }) }} className="button  run "><b> Change language</b></button>
+                {visible ? <div>
+                    <ul onClick={() => { setlanguage('java'); setvisible(false) }}>Java</ul>
+                    <ul onClick={() => { setlanguage('cpp'); setvisible(false) }}>cpp</ul>
+                    <ul onClick={() => { setlanguage('python3'); setvisible(false) }}>Python</ul>
+                    <ul onClick={() => { setlanguage(); setvisible(false) }}>JavaScript</ul>
+                </div> : <div></div>}
+
+                <pre className="run">{output}</pre>
             </div>
             <div className="footer">
-                <button onClick={copyID} className="button"><b>Copy ID</b></button>
+                <button onClick={copyID} className="button  bottom "><b>Copy ID</b></button>
+
             </div>
         </div>
     );

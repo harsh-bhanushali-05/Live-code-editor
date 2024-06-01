@@ -1,15 +1,77 @@
 import "./RoomStyles.css";
 import logo from "../logo.png";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Client from "../Components/Client";
 import toast from "react-hot-toast";
 import Editor, { loader } from '@monaco-editor/react';
 import axios from 'axios';
-import { edit_key, secret } from "../data.jsx"
+import { edit_key, secret } from "../data.jsx";
+import { initSocket } from "../socket";
+import ACTIONS from "../Actions";
+import { useLocation, useNavigate, useParams } from 'react-router-dom';
+
 function Room(props) {
-
-
+    const { id } = useParams();
     const [code, setCode] = useState('// type your code here');
+
+    // const id = props.id;
+    const location = useLocation();
+    const socketRef = useRef(null);
+    const codeRef = useRef(null);
+
+    const nav = useNavigate();
+    const [client, setClient] = useState([]);
+    useEffect(() => {
+        const init = async () => {
+            socketRef.current = await initSocket();
+            socketRef.current.on('connect_error', (err) => handleErrors(err));
+            socketRef.current.on('connect_failed', (err) => handleErrors(err));
+            function handleErrors(e) {
+                console.log("There is an error in the socket connection ");
+                toast.error("Could not connect to the server try again in a bit!");
+                nav('/');
+            }
+            console.log(id);
+            socketRef.current.emit(ACTIONS.JOIN, {
+                id,
+                username: location.state?.username,
+            });
+            socketRef.current.on(ACTIONS.JOINED, ({ client, username, socket_id }) => {
+                if (username != location.state.username) {
+                    socketRef.current.emit(ACTIONS.SYNC, ({ socket_id, code: codeRef.current }));
+
+                    toast.success(`${username} joined the room`);
+                }
+                setClient(client);
+            })
+
+            socketRef.current.on(ACTIONS.DISCONNECTED, ({ socket_id, username }) => {
+                console.log("SOME ONE LEFT ");
+                toast.error(`${username} has left the room `);
+                setClient((prev) => {
+                    console.log(prev);
+                    return prev.filter(client => client.socket_id != socket_id);
+                })
+            })
+            socketRef.current.on(ACTIONS.CHANGE, ({ value }) => {
+                console.log(value)
+                if (code !== null) {
+                    console.log(value);
+                    setCode(value);
+                }
+            })
+            return () => {
+                socketRef.current.off(ACTIONS.JOINED);
+                socketRef.current.off(ACTIONS.DISCONNECTED);
+
+                socketRef.current.disconnect();
+            }
+        };
+        init();
+        if (!location.state)
+            nav('/')
+    }, []);
+
     const [output, setOutput] = useState('');
     const editorOptions = {
         fontSize: 16,
@@ -20,8 +82,8 @@ function Room(props) {
     useEffect(() => {
         loader.init().then(monaco => {
             monaco.editor.defineTheme('myCustomTheme', {
-                base: 'vs-dark', // or 'vs' for light theme
-                inherit: true, // will inherit from the base theme
+                base: 'vs-dark',
+                inherit: true,
                 preview: false,
                 rules: [],
                 colors: {
@@ -37,16 +99,19 @@ function Room(props) {
             monaco.editor.setTheme('myCustomTheme');
         });
     }, []);
+    function changeCode(value) {
+        codeRef.current = value;
+        setCode(value)
+        socketRef.current.emit(ACTIONS.CHANGE, {
+            id,
+            code: value,
 
-    const [client, setClient] = useState([
-        { sokectID: 1, username: "Harsh" },
-        { sokectID: 2, username: "rakesh" },
-        { sokectID: 3, username: "nisha" },
-    ]);
+        })
+    }
 
     function copyID() {
-        navigator.clipboard.writeText(props.id);
-        toast.success("Room Id copied to clipboard")
+        navigator.clipboard.writeText(id);
+        toast.success("Room Id copied to clipboard");
     }
 
     const runCode = async () => {
@@ -55,16 +120,14 @@ function Room(props) {
         const language = 'java';
         const versionIndex = '3';
         try {
-            const response = await axios.post('/v1/execute/', {
-                "script": code,
-                "language": language,
-                "versionIndex": versionIndex,
-                "clientId": clientId,
-                "clientSecret": clientSecret,
-            }).then((response) => {
-                setOutput(response.data.output);
-
+            const response = await axios.post('/v1/execute', {
+                script: code,
+                language: language,
+                versionIndex: versionIndex,
+                clientId: clientId,
+                clientSecret: clientSecret,
             });
+            setOutput(response.data.output);
         } catch (error) {
             console.error('Error executing code:', error);
             setOutput('Error executing code');
@@ -92,8 +155,8 @@ function Room(props) {
                 <Editor
                     height="60vh"
                     defaultLanguage="java"
-                    defaultValue={code}
-                    onChange={(value) => setCode(value)}
+                    value={code}
+                    onChange={(value) => changeCode(value)}
                     options={editorOptions}
                     theme="myCustomTheme"
                 />

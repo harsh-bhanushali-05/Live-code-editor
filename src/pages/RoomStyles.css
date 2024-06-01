@@ -66,3 +66,11 @@ div:hover + p {
 .run{
     margin-left: 5%;
 }
+.credits{
+    position: absolute;
+    right: 10px;
+}
+.credits a{
+    text-decoration: dotted;
+    color: white;
+}

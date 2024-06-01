@@ -5,7 +5,6 @@ import Client from "../Components/Client";
 import toast from "react-hot-toast";
 import Editor, { loader } from '@monaco-editor/react';
 import axios from 'axios';
-import { REACT_APP_BACKEND, edit_key, secret } from "../data.jsx";
 import { initSocket } from "../socket";
 import ACTIONS from "../Actions";
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
@@ -38,7 +37,7 @@ function Room(props) {
             });
             socketRef.current.on(ACTIONS.JOINED, ({ client, username, socket_id }) => {
                 if (username != location.state.username) {
-                    socketRef.current.emit(ACTIONS.SYNC, ({ socket_id, code: codeRef.current }));
+                    socketRef.current.emit(ACTIONS.SYNC, ({ socket_id, code: codeRef.current || "Ask other user to hit spacebar" }));
 
                     toast.success(`${username} joined the room`);
                 }
@@ -115,8 +114,8 @@ function Room(props) {
     }
 
     const runCode = async () => {
-        const clientId = edit_key;
-        const clientSecret = secret;
+        const clientId = process.env.edit_key;
+        const clientSecret = process.env.secret;
         // const language = 'java';
         const versionIndex = '3';
         try {
@@ -175,7 +174,7 @@ function Room(props) {
             </div>
             <div className="footer">
                 <button onClick={copyID} className="button  bottom "><b>Copy ID</b></button>
-
+                <h3 className="credits"> Made by -> <a href="https://www.linkedin.com/in/harsh-bhanushali-706044225/s">Harsh Bhanushali</a> </h3>
             </div>
         </div>
     );

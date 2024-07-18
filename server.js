@@ -23,7 +23,7 @@ function getAllUser(id) {
 }
 // new changes 
 app.use(express.static('build'));
-app.use((req, res, next) => {
+app.get('/*', function (req, res) {
     res.sendFile(path.join(__dirname, 'build', 'index.html'));
 })
 

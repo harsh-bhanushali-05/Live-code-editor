@@ -2,14 +2,22 @@ const express = require('express');
 const http = require('http');
 const path = require('path');
 const { Server } = require('socket.io');
+const cors = require('cors'); // Import cors
 const ACTIONS = require('./src/Actions');
 
 const app = express();
 const server = http.createServer(app);
-const io = new Server(server);
+const io = new Server(server, {
+    cors: {
+        origin: '*', // Allow requests from any origin
+        methods: ["GET", "POST"], // Allow these HTTP methods
+    }
+});
 
 // Middleware to parse JSON
 app.use(express.json());
+app.use(cors()); // Use cors middleware
+
 const map = {};
 
 function getAllUser(id) {
@@ -21,6 +29,7 @@ function getAllUser(id) {
     });
 
 }
+
 // new changes 
 app.use(express.static('build'));
 app.get('/*', function (req, res) {

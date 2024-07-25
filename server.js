@@ -2,7 +2,7 @@ const express = require('express');
 const http = require('http');
 const path = require('path');
 const { Server } = require('socket.io');
-const cors = require('cors'); // Import cors
+const cors = require('cors');
 const ACTIONS = require('./src/Actions');
 
 const app = express();
@@ -11,12 +11,13 @@ const io = new Server(server, {
     cors: {
         origin: '*', // Allow requests from any origin
         methods: ["GET", "POST"], // Allow these HTTP methods
+        credentials: true, // Allow credentials (e.g., cookies)
     }
 });
 
 // Middleware to parse JSON
 app.use(express.json());
-app.use(cors()); // Use cors middleware
+app.use(cors());
 
 const map = {};
 
@@ -27,14 +28,13 @@ function getAllUser(id) {
             username: map[socket_id],
         };
     });
-
 }
 
-// new changes 
+// Serve static files
 app.use(express.static('build'));
 app.get('/*', function (req, res) {
     res.sendFile(path.join(__dirname, 'build', 'index.html'));
-})
+});
 
 // Socket.IO connection handling
 io.on('connection', (socket) => {
@@ -50,15 +50,15 @@ io.on('connection', (socket) => {
                 client,
                 username,
                 socket_id: socket.id,
-            })
-        })
+            });
+        });
     });
     socket.on(ACTIONS.CHANGE, ({ id, code }) => {
-        console.log("I am emiting the change to users ");
+        console.log("I am emitting the change to users");
         io.to(id).emit(ACTIONS.CHANGE, { value: code });
     });
     socket.on(ACTIONS.SYNC, ({ socket_id, code }) => {
-        console.log("SYNC request recieved ", code);
+        console.log("SYNC request received", code);
         io.to(socket_id).emit(ACTIONS.CHANGE, { value: code });
     });
     socket.on('disconnecting', () => {
@@ -67,12 +67,11 @@ io.on('connection', (socket) => {
             socket.in(id).emit(ACTIONS.DISCONNECTED, {
                 socket_id: socket.id,
                 username: map[socket.id],
-            })
-        })
+            });
+        });
         delete map[socket.id];
         socket.leave();
-    })
-
+    });
 });
 
 // Start the server

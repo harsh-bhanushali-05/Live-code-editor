@@ -3,21 +3,27 @@ import logo from "../logo.png";
 import { useEffect, useRef, useState } from "react";
 import Client from "../Components/Client";
 import toast from "react-hot-toast";
-import Editor, { loader } from '@monaco-editor/react';
+import AceEditor from "react-ace";
 import axios from 'axios';
 import { initSocket } from "../socket";
 import ACTIONS from "../Actions";
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 
+// Import Ace Editor modes and themes
+import "ace-builds/src-noconflict/mode-java";
+import "ace-builds/src-noconflict/mode-c_cpp";
+import "ace-builds/src-noconflict/mode-python";
+import "ace-builds/src-noconflict/mode-javascript";
+import "ace-builds/src-noconflict/theme-monokai";
+
 function Room(props) {
     const { id } = useParams();
     const [code, setCode] = useState('// type your code here');
-    const [visible, setvisible] = useState(false);
-    // const id = props.id;
+    const [visible, setVisible] = useState(false);
     const location = useLocation();
     const socketRef = useRef(null);
     const codeRef = useRef(null);
-    const [language, setlanguage] = useState("java");
+    const [language, setLanguage] = useState("java");
     const nav = useNavigate();
     const [client, setClient] = useState([]);
     useEffect(() => {
@@ -36,76 +42,54 @@ function Room(props) {
                 username: location.state?.username,
             });
             socketRef.current.on(ACTIONS.JOINED, ({ client, username, socket_id }) => {
-                if (username != location.state.username) {
+                if (username !== location.state.username) {
                     socketRef.current.emit(ACTIONS.SYNC, ({ socket_id, code: codeRef.current || "Ask other user to hit spacebar" }));
-
                     toast.success(`${username} joined the room`);
                 }
                 setClient(client);
-            })
+            });
 
             socketRef.current.on(ACTIONS.DISCONNECTED, ({ socket_id, username }) => {
-                console.log("SOME ONE LEFT ");
+                console.log("SOMEONE LEFT ");
                 toast.error(`${username} has left the room `);
                 setClient((prev) => {
                     console.log(prev);
-                    return prev.filter(client => client.socket_id != socket_id);
-                })
-            })
+                    return prev.filter(client => client.socket_id !== socket_id);
+                });
+            });
+
             socketRef.current.on(ACTIONS.CHANGE, ({ value }) => {
-                console.log(value)
+                console.log(value);
                 if (code !== null) {
                     console.log(value);
                     setCode(value);
                 }
-            })
+            });
+
             return () => {
                 socketRef.current.off(ACTIONS.JOINED);
                 socketRef.current.off(ACTIONS.DISCONNECTED);
-
                 socketRef.current.disconnect();
-            }
+            };
         };
         init();
-        if (!location.state)
-            nav('/')
+        if (!location.state) nav('/');
     }, []);
 
-    const [output, setOutput] = useState('');
+    const [output, setOutput] = useState('Output will be shown here');
     const editorOptions = {
         fontSize: 16,
         lineHeight: 20,
         fontFamily: 'Fira Code, monospace',
     };
 
-    useEffect(() => {
-        loader.init().then(monaco => {
-            monaco.editor.defineTheme('myCustomTheme', {
-                base: 'vs-dark',
-                inherit: true,
-                preview: false,
-                rules: [],
-                colors: {
-                    'editor.background': '#171717',
-                    'editor.foreground': '#F57D1F',
-                    'editorCursor.foreground': '#F57D1F',
-                    'editor.lineHighlightBackground': '#171717',
-                    'editorLineNumber.foreground': '#DA0037',
-                    'editor.selectionBackground': '#DA0037',
-                    'editor.inactiveSelectionBackground': '#DA0037',
-                }
-            });
-            monaco.editor.setTheme('myCustomTheme');
-        });
-    }, []);
     function changeCode(value) {
         codeRef.current = value;
-        setCode(value)
+        setCode(value);
         socketRef.current.emit(ACTIONS.CHANGE, {
             id,
             code: value,
-
-        })
+        });
     }
 
     function copyID() {
@@ -116,9 +100,8 @@ function Room(props) {
     const runCode = async () => {
         const clientId = process.env.edit_key;
         const clientSecret = process.env.secret;
-        // const language = 'java';
         const versionIndex = '3';
-        console.log("this is the change ")
+        console.log("this is the change");
         try {
             const response = await axios.post('/v1/execute', {
                 script: code,
@@ -145,36 +128,39 @@ function Room(props) {
                     <div className="User user-list">
                         <p className="user-list">
                             {client.map((e) =>
-                                <Client className="User" key={e.sokectID} username={e.username} />
+                                <Client className="User" key={e.socket_id} username={e.username} />
                             )}
                         </p>
                     </div>
                 </div>
             </div>
             <div>
-                <Editor
-                    height="60vh"
-                    defaultLanguage={language}
+                <AceEditor
+                    mode={language}
+                    theme="monokai"
                     value={code}
-                    onChange={(value) => changeCode(value)}
-                    options={editorOptions}
-                    theme="myCustomTheme"
+                    onChange={changeCode}
+                    name="editor"
+                    editorProps={{ $blockScrolling: true }}
+                    setOptions={editorOptions}
+                    height="60vh"
+                    width="100%"
                 />
-                <div class="horizontal-line"></div>
+                <div className="horizontal-line"></div>
                 <button onClick={runCode} className="button run"><b onClick={runCode}>Run Code</b></button>
                 <button className="button run"><b>Current language : {language}</b></button>
-                <button onClick={() => { setvisible((prev) => { return !prev }) }} className="button  run "><b> Change language</b></button>
+                <button onClick={() => { setVisible((prev) => { return !prev }) }} className="button run"><b> Change language</b></button>
                 {visible ? <div>
-                    <ul onClick={() => { setlanguage('java'); setvisible(false) }}>Java</ul>
-                    <ul onClick={() => { setlanguage('cpp'); setvisible(false) }}>cpp</ul>
-                    <ul onClick={() => { setlanguage('python3'); setvisible(false) }}>Python</ul>
-                    <ul onClick={() => { setlanguage(); setvisible(false) }}>JavaScript</ul>
+                    <ul onClick={() => { setLanguage('java'); setVisible(false) }}>Java</ul>
+                    <ul onClick={() => { setLanguage('c_cpp'); setVisible(false) }}>C++</ul>
+                    <ul onClick={() => { setLanguage('python'); setVisible(false) }}>Python</ul>
+                    <ul onClick={() => { setLanguage('javascript'); setVisible(false) }}>JavaScript</ul>
                 </div> : <div></div>}
 
                 <pre className="run">{output}</pre>
             </div>
             <div className="footer">
-                <button onClick={copyID} className="button  bottom "><b>Copy ID</b></button>
+                <button onClick={copyID} className="button bottom"><b>Copy ID</b></button>
                 <h3 className="credits"> Made by -> <a href="https://www.linkedin.com/in/harsh-bhanushali-706044225/s">Harsh Bhanushali</a> </h3>
             </div>
         </div>
